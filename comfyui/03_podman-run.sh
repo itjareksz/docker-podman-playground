@@ -21,7 +21,10 @@ podman run -d \
   -v "${HOME}/comfyui/user:/app/ComfyUI/user:z" \
   -v "${HOME}/comfyui/custom_nodes:/app/ComfyUI/custom_nodes:z" \
   --tz Europe/Warsaw \
-  -p 8188:8188 \
+  -p 127.0.0.1:8188:8188 \
+  --cap-drop=ALL \
+  --security-opt no-new-privileges \
+  --pids-limit=100 \
   --device nvidia.com/gpu=all \
   localhost/comfyui:"${comfyui_version}"
 
@@ -35,6 +38,10 @@ podman run -d \
 # -v (...):z - z label needed for operating systems using SELinux;
 #              z option tells Podman that two or more containers share the volume content
 #              https://docs.podman.io/en/latest/markdown/podman-run.1.html#volume-v-source-volume-host-dir-container-dir-options
+#
+# -p 127.0.0.1:8188:8188 - restrict container network access to local machine
+#
+# --cap-drop, --security-opt, --pids-limit - options to harden container
 #
 # Paths:
 # - /comfyui/models - models
