@@ -7,9 +7,9 @@ ARG cuda_version
 
 # Install packages
 RUN apt update \
-  && apt install -y git \
+  && apt install -y --no-install-recommends git tini \
   && apt autoclean \
-  && apt autoremove --purge \
+  && apt autoremove -y --purge \
   && rm -rf /var/lib/apt/lists
 
 # Create non-root user
@@ -19,6 +19,9 @@ WORKDIR /app
 
 # Ensure created user can write to the working directory
 RUN chown -R comfyui:comfyui /app
+
+# Add directory to PATH; needed by some python packages
+ENV PATH="/home/comfyui/.local/bin:$PATH"
 
 # Switch to user
 USER comfyui
@@ -37,4 +40,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 8188
 
-ENTRYPOINT ["python","/app/ComfyUI/main.py","--listen","0.0.0.0"]
+ENTRYPOINT ["tini", "--", "python","/app/ComfyUI/main.py","--listen","0.0.0.0"]
