@@ -10,6 +10,7 @@ RUN apt-get update \
     fzf ripgrep fd-find \
     man-db tree unzip \
     ansible ansible-lint \
+    python3 python3-pip python3-venv \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists
 
@@ -79,6 +80,21 @@ RUN npm install -g dockerfile-language-server-nodejs@${dockerfile_lsp_version}
 ARG hadolint_version="v2.15.1"
 RUN curl -fsSL -o "${HOME}/.local/bin/hadolint" https://github.com/hadolint/hadolint/releases/download/${hadolint_version}/hadolint-linux-x86_64 \
   && chmod 700 "${HOME}/.local/bin/hadolint"
+
+# --- Python LSP ---
+ARG python_lsp_version="1.1.414"
+RUN npm install -g pyright@${python_lsp_version}
+# --- Python linter ---
+ARG pylint_version="4.1.3"
+RUN mkdir -p ${HOME}/venv \
+  && python3 -m venv ${HOME}/venv \
+  && ${HOME}/venv/bin/pip install pylint==${pylint_version}
+# --- Python formatter ---
+ARG black_version="26.10.1"
+RUN ${HOME}/venv/bin/pip install black==${black_version}
+# --- Python debugger ---
+ARG debugpy_version="1.8.22"
+RUN ${HOME}/venv/bin/pip install debugpy==${debugpy_version}
 
 # Set bash aliases
 RUN printf "\nalias ll='ls -lah --color=auto'" >> ${HOME}/.bashrc \

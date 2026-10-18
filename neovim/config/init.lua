@@ -6,6 +6,9 @@
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
 
+-- Helper variable for home path
+local home = vim.fn.expand("~")
+
 -- =============================================
 -- Keymaps
 -- =============================================
@@ -76,7 +79,7 @@ vim.opt.listchars = { tab = "» ", trail = "·", nbsp = "␣" }
 --        version = "v0.0.0",
 --    },
 --})
--- Enable plugins
+-- -- Enable plugins
 --<plugin-name> = require("<plugin-name>")
 
 -- --------------------------
@@ -152,7 +155,7 @@ vim.pack.add({
 require("mini.icons").setup()
 
 -- mini.pick - show window with picker
-require("mini.pick").setup({})
+require("mini.pick").setup()
 -- Find keymaps
 vim.keymap.set("n", "<leader>o", "<cmd>Pick buffers<CR>", {desc = "Find open buffers"})
 vim.keymap.set("n", "<leader>ff", "<cmd>Pick files<CR>", {desc = "Find files in project"})
@@ -230,6 +233,7 @@ miniclue.setup({
                { mode = "n", keys = "<leader>s", desc = "+Spell checker" },
                { mode = "n", keys = "<leader>g", desc = "+Git" },
                { mode = "n", keys = "<leader>l", desc = "+LSP" },
+               { mode = "n", keys = "<leader>d", desc = "+Debug" },
 
                -- Descriptions for key combinations
                { mode = { "n", "x" }, keys = "dd", desc = "Delete" },
@@ -304,6 +308,8 @@ vim.pack.add({
 })
 vim.g.ale_virtualtext_cursor = "disabled"
 
+vim.g.ale_python_pylint_executable = home .. "/venv/bin/pylint"
+
 -- --------------------------
 -- conform.nvim - formatter
 -- --------------------------
@@ -316,13 +322,121 @@ vim.pack.add({
     },
 })
 require("conform").setup({
+    formatters = {
+        black = {
+            command = home .. "/venv/bin/black"
+        }
+    },
+
     formatters_by_ft = {
         markdown = { "prettier" },
         sh = { lsp_format = "fallback" },
         yaml = { lsp_format = "fallback" },
         ["ansible.yaml"] = { "prettier" },
+        python = { "black" },
     },
 })
+
+-- =============================================
+-- DAP (Debugger)
+-- =============================================
+
+vim.pack.add({
+   {
+       src = "https://github.com/mfussenegger/nvim-dap",
+       name = "dap",
+       version = "0.10.0",
+   },
+   {
+       src = "https://github.com/rcarriga/nvim-dap-ui",
+       name = "dap-ui",
+       version = "v4.0.0",
+   },
+   {
+       src = "https://github.com/nvim-neotest/nvim-nio",
+       name = "nio",
+       version = "v1.10.1",
+   },
+})
+
+require("dapui").setup()
+
+-- DAP Adapter setup for Python
+local dap = require('dap')
+dap.adapters.python = function(cb, config)
+if config.request == 'attach' then
+    ---@diagnostic disable-next-line: undefined-field
+    local port = (config.connect or config).port
+    ---@diagnostic disable-next-line: undefined-field
+    local host = (config.connect or config).host or '127.0.0.1'
+    cb({
+        type = 'server',
+        port = assert(port, '`connect.port` is required for a python `attach` configuration'),
+        host = host,
+        options = {
+            source_filetype = 'python',
+        },
+    })
+    else
+        cb({
+            type = 'executable',
+            command = home .. '/venv/bin/python', -- set path to venv python with debugpy
+            args = { '-m', 'debugpy.adapter' },
+            options = {
+                source_filetype = 'python',
+            },
+        })
+    end
+end
+
+dap.configurations.python = {
+    {
+        -- The first three options are required by nvim-dap
+        type = 'python'; -- the type here established the link to the adapter definition: `dap.adapters.python`
+        request = 'launch';
+        name = "Launch file";
+
+        -- Options below are for debugpy, see https://github.com/microsoft/debugpy/wiki/Debug-configuration-settings for supported options
+
+        program = "${file}"; -- This configuration will launch the current file if used.
+        pythonPath = function()
+            -- debugpy supports launching an application with a different interpreter then the one used to launch debugpy itself.
+            -- The code below looks for a `venv` or `.venv` folder in the current directly and uses the python within.
+            -- You could adapt this - to for example use the `VIRTUAL_ENV` environment variable.
+            local cwd = vim.fn.getcwd()
+            if vim.fn.executable(cwd .. '/venv/bin/python') == 1 then
+                return cwd .. '/venv/bin/python'
+            elseif vim.fn.executable(cwd .. '/.venv/bin/python') == 1 then
+                return cwd .. '/.venv/bin/python'
+            else
+                return '/usr/bin/python3'
+            end
+        end;
+    },
+}
+
+-- Open dap-ui when debug is run
+local dapui = require 'dapui'
+dap.listeners.before.attach.dapui_config = function()
+    dapui.open()
+end
+dap.listeners.before.launch.dapui_config = function()
+    dapui.open()
+end
+dap.listeners.before.event_terminated.dapui_config = function()
+    dapui.close()
+end
+dap.listeners.before.event_exited.dapui_config = function()
+    dapui.close()
+end
+
+-- Debug keymaps
+vim.keymap.set("n", "<leader>db", "<cmd>DapToggleBreakpoint<CR>", { desc = "Debug: Toggle Breakpoint" })
+vim.keymap.set("n", "<leader>ds", "<cmd>DapContinue<CR>", { desc = "Debug: Start/Continue" })
+vim.keymap.set("n", "<leader>dt", "<cmd>DapTerminate<CR>", { desc = "Debug: Terminate" })
+vim.keymap.set("n", "<leader>dj", "<cmd>DapStepInto<CR>", { desc = "Debug: Step Into" })
+vim.keymap.set("n", "<leader>dk", "<cmd>DapStepOver<CR>", { desc = "Debug: Step Over" })
+vim.keymap.set("n", "<leader>dl", "<cmd>DapStepOut<CR>", { desc = "Debug: Step Out" })
 
 -- =============================================
 -- LSP
@@ -370,18 +484,25 @@ vim.lsp.config["yaml-language-server"] = {
 vim.lsp.enable("yaml-language-server")
 
 -- dockerfile-language-server
-vim.lsp.config("dockerfile-language-server", {
+vim.lsp.config["dockerfile-language-server"] = {
     cmd = { "docker-langserver", "--stdio" },
     filetypes = { "dockerfile" },
-})
+}
 vim.lsp.enable("dockerfile-language-server")
 
 -- markdown-language-server
-vim.lsp.config("markdown-language-server", {
+vim.lsp.config["markdown-language-server"] = {
     cmd = { "markdown-oxide" },
     filetypes = { "markdown" },
-})
+}
 vim.lsp.enable("markdown-language-server")
+
+-- python-language-server
+vim.lsp.config["python-language-server"] = {
+    cmd = { 'pyright-langserver', '--stdio' },
+    filetypes = { 'python' },
+}
+vim.lsp.enable("python-language-server")
 
 -- =============================================
 -- Autocommands
