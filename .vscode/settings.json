@@ -3,5 +3,7 @@
   "files.insertFinalNewline": true,
   "editor.formatOnSave": true,
   "editor.wordWrap": "on",
-  "shellformat.flag": "-i 2 -ci -bn"
+  "[shellscript]": {
+        "editor.tabSize": 2
+    },
 }

@@ -1,0 +1,8 @@
+# top-most EditorConfig file
+root = true
+
+# Formatting options for shfmt
+[*.sh]
+# Equivalent to: shfmt -ci -bn
+switch_case_indent = true
+binary_next_line = true

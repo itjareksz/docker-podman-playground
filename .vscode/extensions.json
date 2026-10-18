@@ -1,8 +1,6 @@
 {
-    // - foxundermoon.shell-format - use version 7.2.5
     "recommendations": [
-        "timonwong.shellcheck",
-        "foxundermoon.shell-format",
+        "mads-hartmann.bash-ide-vscode",
         "streetsidesoftware.code-spell-checker",
         "esbenp.prettier-vscode"
     ]
