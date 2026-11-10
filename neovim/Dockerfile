@@ -1,6 +1,11 @@
+ARG image_version="0.2.0"
+ARG image_name="neovim"
 ARG base_image="debian:trixie-20261104-slim"
 
 FROM ${base_image}
+
+LABEL image_name="${image_name}"
+LABEL image_version="${image_version}"
 
 # Install packages
 # ansible ansible-lint - needed by ansible-language-server

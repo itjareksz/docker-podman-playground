@@ -27,12 +27,12 @@ fi
 # Run container
 # =========================================================
 
-# Find and assign image version from 01_podman-build.sh to a variable
+# Find and assign image version from Dockerfile to a variable
 # - -F'=' - separate at = character
 # - gsub() - remove double or single quotes
 # - printf() - don't print new line
-image_version=$(awk -F'=' '/^image_version=/{gsub(/["'\'']/, "", $2); printf "%s", $2}' ./01_podman-build.sh)
-image_name=$(awk -F'=' '/^image_name=/{gsub(/["'\'']/, "", $2); printf "%s", $2}' ./01_podman-build.sh)
+image_version=$(awk -F'=' '/^ARG image_version=/{gsub(/["'\'']/, "", $2); printf "%s", $2}' ./Dockerfile)
+image_name=$(awk -F'=' '/^ARG image_name=/{gsub(/["'\'']/, "", $2); printf "%s", $2}' ./Dockerfile)
 
 echo "Creating container from image: localhost/${image_name}:${image_version}"
 
