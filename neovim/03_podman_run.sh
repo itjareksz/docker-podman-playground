@@ -36,18 +36,8 @@ image_name=$(awk -F'=' '/^ARG image_name=/{gsub(/["'\'']/, "", $2); printf "%s",
 
 echo "Creating container from image: localhost/${image_name}:${image_version}"
 
-podman run -it --rm \
-  --name ${image_name} \
-  --replace \
-  --userns=keep-id:uid=1000,gid=1000 \
-  -v "${project_dir}:/project:z" \
-  --tz Europe/Warsaw \
-  --cap-drop=ALL \
-  --security-opt no-new-privileges \
-  --security-opt label=disable \
-  --pids-limit=100 \
-  "localhost/${image_name}:${image_version}"
-
+# Create and run container with following options:
+#
 # --replace - if another container with the same name already exists, replace and remove it
 #
 #
@@ -63,3 +53,14 @@ podman run -it --rm \
 #
 # --security-opt label=disable - disable SELinux separation for the container,
 #                                used when mounted volume on host is on a filesystem that doesn't support SELinux labels (like shared filesystem in VM)
+podman run -it --rm \
+  --name ${image_name} \
+  --replace \
+  --userns=keep-id:uid=1000,gid=1000 \
+  -v "${project_dir}:/project:z" \
+  --tz Europe/Warsaw \
+  --cap-drop=ALL \
+  --security-opt no-new-privileges \
+  --security-opt label=disable \
+  --pids-limit=100 \
+  "localhost/${image_name}:${image_version}"
