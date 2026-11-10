@@ -1,8 +1,9 @@
-ARG image_version="0.2.0"
-ARG image_name="neovim"
 ARG base_image="debian:trixie-20261104-slim"
 
 FROM ${base_image}
+
+ARG image_name="neovim"
+ARG image_version="0.2.0"
 
 LABEL image_name="${image_name}"
 LABEL image_version="${image_version}"
