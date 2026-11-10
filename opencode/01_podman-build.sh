@@ -5,9 +5,9 @@ set -eu -o pipefail
 # set -x
 
 # Base image version, get current version from https://hub.docker.com/_/debian
-base_image="debian:trixie-20260713-slim"
+base_image="debian:trixie-20261104-slim"
 # OpenCode version, get current version from https://github.com/anomalyco/opencode/releases
-opencode_version="1.18.11"
+opencode_version="2.2.7"
 
 podman build \
   --build-arg base_image=${base_image} \
