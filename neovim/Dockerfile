@@ -1,4 +1,4 @@
-ARG base_image="debian:trixie-20260918-slim"
+ARG base_image="debian:trixie-20261104-slim"
 
 FROM ${base_image}
 
@@ -15,13 +15,13 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists
 
 # Install Neovim
-ARG neovim_version="v0.12.5"
+ARG neovim_version="v0.12.6"
 RUN curl -fsSL -o "/opt/neovim.tar.gz" https://github.com/neovim/neovim/releases/download/${neovim_version}/nvim-linux-x86_64.tar.gz \
   && tar -xzf "/opt/neovim.tar.gz" -C "/opt/" \
   && rm "/opt/neovim.tar.gz"
 
 # Install Node.js with NPM
-ARG node_version="v24.21.0"
+ARG node_version="v24.22.2"
 RUN curl -fsSL -o "/opt/node.tar.gz" https://nodejs.org/dist/${node_version}/node-${node_version}-linux-x64.tar.gz \
   && tar -xzf "/opt/node.tar.gz" -C "/opt/" \
   && rm "/opt/node.tar.gz"

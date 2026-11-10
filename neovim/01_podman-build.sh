@@ -4,7 +4,7 @@ set -euo pipefail
 # Uncomment for debug
 # set -x
 
-image_version="0.1.0"
+image_version="0.1.1"
 image_name="neovim"
 
 podman build \
